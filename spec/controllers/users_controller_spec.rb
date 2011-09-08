@@ -57,6 +57,16 @@ describe UsersController do
                                            :content => "Next")
       end
     end
+
+    describe "as a non_admin user" do
+      before (:each) do
+        @user = test_sign_in(Factory(:user))
+      end
+
+      it "should not have delete links for users" do
+        response.should_not have_selector("a", :content => "delete")
+      end
+    end
   end
 
   describe "GET 'new'" do
@@ -316,8 +326,8 @@ describe UsersController do
     describe "as an admin user" do
  
       before(:each) do
-        admin = Factory(:user, :email => "admin@example.com", :admin => true)
-        test_sign_in(admin)
+        @admin = Factory(:user, :email => "admin@example.com", :admin => true)
+        test_sign_in(@admin)
       end
 
       it "should destroy the user" do
@@ -329,6 +339,12 @@ describe UsersController do
       it "should redirect to the users page" do
         delete :destroy, :id => @user
         response.should redirect_to(users_path)
+      end
+ 
+      it "should not delete own user" do
+        lambda do  
+          delete :destroy, :id => @admin
+        end.should_not change(User, :count).by(-1)
       end
     end
   end
