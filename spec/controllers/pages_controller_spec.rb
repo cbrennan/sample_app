@@ -8,6 +8,11 @@ describe PagesController do
   end
 
   describe "GET 'home'" do
+
+    before(:each) do
+      @user = test_sign_in(Factory(:user))
+    end
+
     it "should be successful" do
       get 'home'
       response.should be_success
@@ -21,10 +26,6 @@ describe PagesController do
     
     describe "Micropost counter sidebar" do
       
-      before(:each) do
-        @user = test_sign_in(Factory(:user))
-      end
-
       it "should display singlular micropost" do
         micropost = Factory(:micropost, :user => @user)
         get 'home'
@@ -38,6 +39,27 @@ describe PagesController do
         response.should have_selector("span", :content => "2 microposts")
       end
     end
+
+    describe "Feed" do
+      
+      before(:each) do
+        50.times do
+          Factory(:micropost, :user => @user)
+        end
+      end
+
+      it "should paginate microposts" do
+        get 'home'
+        response.should have_selector("div.pagination")
+        response.should have_selector("span.disabled", :content => "Previous")
+        response.should have_selector("a", :href => "/?page=2",
+                                           :content => "2")
+        response.should have_selector("a", :href => "/?page=2",
+                                           :content => "Next")
+      end
+    end
+        
+    
   end
 
   describe "GET 'contact'" do
