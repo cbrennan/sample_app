@@ -18,6 +18,26 @@ describe PagesController do
       response.should have_selector("title",
         :content => @base_title+"Home")
     end
+    
+    describe "Micropost counter sidebar" do
+      
+      before(:each) do
+        @user = test_sign_in(Factory(:user))
+      end
+
+      it "should display singlular micropost" do
+        micropost = Factory(:micropost, :user => @user)
+        get 'home'
+        response.should have_selector("span", :content => "1 micropost")
+      end
+
+      it "should display plural microposts" do
+        micropost = Factory(:micropost, :user => @user)
+        micropost2 = Factory(:micropost, :user => @user)
+        get 'home'
+        response.should have_selector("span", :content => "2 microposts")
+      end
+    end
   end
 
   describe "GET 'contact'" do
