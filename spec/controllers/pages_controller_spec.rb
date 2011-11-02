@@ -57,9 +57,23 @@ describe PagesController do
         response.should have_selector("a", :href => "/?page=2",
                                            :content => "Next")
       end
+
+      it "should have delete links for microposts created by signed in user" do
+        mp =  Factory(:micropost, :user => @user, :content => "Lorem Espera")
+        get 'home'
+        response.should have_selector("a", :href => "/microposts/"+mp.id.to_s,
+                                           :content => "delete")
+      end
+
+      it "should not have delete links for microposts created by other users" do
+        other_user = Factory(:user, :email => "another@example.edu")
+        mp = Factory(:micropost, :user => other_user, :content => "Lorem Espera")
+        get 'home'
+        response.should_not have_selector("a", :href => "/microposts/"+mp.id.to_s,
+                                               :content => "delete")
+      end
     end
         
-    
   end
 
   describe "GET 'contact'" do

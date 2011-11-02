@@ -139,6 +139,28 @@ describe UsersController do
       response.should have_selector("span.content", :content => mp1.content)
       response.should have_selector("span.content", :content => mp2.content)
     end
+
+    describe "signed in user" do
+
+      before(:each) do
+        test_sign_in(@user)
+      end
+
+      it "should have delete links for own microposts" do
+        mp1 = Factory(:micropost, :user => @user, :content => "Micropost One")
+        get :show, :id => @user
+        response.should have_selector("a", :href => "/microposts/"+mp1.id.to_s, 
+                                           :content => "delete")
+      end
+
+      it "should not have a delete links for other user's microposts" do
+        user2 = Factory(:user, :email => "another@example.edu")
+        mp1 = Factory(:micropost, :user => user2, :content => "Bob's Micropost")
+        get :show, :id => user2
+        response.should_not have_selector("a", :href => "/microposts/"+mp1.id.to_s,
+                                           :content => "delete")
+      end
+    end
   end
 
   describe "POST 'create'" do
