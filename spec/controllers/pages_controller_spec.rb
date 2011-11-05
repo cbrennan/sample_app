@@ -9,71 +9,88 @@ describe PagesController do
 
   describe "GET 'home'" do
 
-    before(:each) do
-      @user = test_sign_in(Factory(:user))
-    end
+    describe "when not signed in" do
 
-    it "should be successful" do
-      get 'home'
-      response.should be_success
-    end
-
-    it "should have the right title" do
-      get 'home'
-      response.should have_selector("title",
-        :content => @base_title+"Home")
-    end
-    
-    describe "Micropost counter sidebar" do
-      
-      it "should display singlular micropost" do
-        micropost = Factory(:micropost, :user => @user)
-        get 'home'
-        response.should have_selector("span", :content => "1 micropost")
-      end
-
-      it "should display plural microposts" do
-        micropost = Factory(:micropost, :user => @user)
-        micropost2 = Factory(:micropost, :user => @user)
-        get 'home'
-        response.should have_selector("span", :content => "2 microposts")
-      end
-    end
-
-    describe "Feed" do
-      
       before(:each) do
-        50.times do
-          Factory(:micropost, :user => @user)
+        get 'home'
+      end
+
+      it "should be successful" do
+        response.should be_success
+      end
+
+      it "should have the right title" do
+        response.should have_selector("title",
+          :content => "#{@base_title}Home")
+      end
+    end
+
+    describe "when signed in" do
+
+      before(:each) do
+        @user = test_sign_in(Factory(:user))
+        other_user = Factory(:user, :email => Factory.next(:email))
+        other_user.follow!(@user)
+      end
+
+      it "should have the right follower/following counts" do
+        get :home
+        response.should have_selector("a", :href => following_user_path(@user),
+                                           :content => "0 following")
+        response.should have_selector("a", :href => followers_user_path(@user),
+                                           :content => "1 follower")
+      end
+    
+      describe "Micropost counter sidebar" do
+      
+        it "should display singlular micropost" do
+          micropost = Factory(:micropost, :user => @user)
+          get 'home'
+          response.should have_selector("span", :content => "1 micropost")
+        end
+
+        it "should display plural microposts" do
+          micropost = Factory(:micropost, :user => @user)
+          micropost2 = Factory(:micropost, :user => @user)
+          get 'home'
+          response.should have_selector("span", :content => "2 microposts")
         end
       end
 
-      it "should paginate microposts" do
-        get 'home'
-        response.should have_selector("div.pagination")
-        response.should have_selector("span.disabled", :content => "Previous")
-        response.should have_selector("a", :href => "/?page=2",
-                                           :content => "2")
-        response.should have_selector("a", :href => "/?page=2",
-                                           :content => "Next")
-      end
+      describe "Feed" do
+      
+        before(:each) do
+          50.times do
+            Factory(:micropost, :user => @user)
+          end
+        end
 
-      it "should have delete links for microposts created by signed in user" do
-        mp =  Factory(:micropost, :user => @user, :content => "Lorem Espera")
-        get 'home'
-        response.should have_selector("a", :href => "/microposts/"+mp.id.to_s,
-                                           :content => "delete")
-      end
+        it "should paginate microposts" do
+          get 'home'
+          response.should have_selector("div.pagination")
+          response.should have_selector("span.disabled", :content => "Previous")
+          response.should have_selector("a", :href => "/?page=2",
+                                             :content => "2")
+          response.should have_selector("a", :href => "/?page=2",
+                                             :content => "Next")
+        end
 
-      it "should not have delete links for microposts created by other users" do
-        other_user = Factory(:user, :email => "another@example.edu")
-        mp = Factory(:micropost, :user => other_user, :content => "Lorem Espera")
-        get 'home'
-        response.should_not have_selector("a", :href => "/microposts/"+mp.id.to_s,
-                                               :content => "delete")
+        it "should have delete links for microposts created by signed in user" do
+          mp =  Factory(:micropost, :user => @user, :content => "Lorem Espera")
+          get 'home'
+          response.should have_selector("a", :href => "/microposts/"+mp.id.to_s,
+                                             :content => "delete")
+        end
+
+        it "should not have delete links for microposts created by other users" do
+          other_user = Factory(:user, :email => "another@example.edu")
+          mp = Factory(:micropost, :user => other_user, :content => "Lorem Espera")
+          get 'home'
+          response.should_not have_selector("a", :href => "/microposts/"+mp.id.to_s,
+                                                 :content => "delete")
+        end
       end
-    end
-        
+    end    
   end
 
   describe "GET 'contact'" do
@@ -90,6 +107,7 @@ describe PagesController do
   end
 
   describe "GET 'about'" do
+
     it "should be successful" do
       get 'about'
       response.should be_success
@@ -103,10 +121,12 @@ describe PagesController do
   end
   
   describe "GET 'help'" do
+
     it "should be successful" do
       get'help'
       response.should be_success
     end
+
     it "should ahve the right title" do
       get 'help'
       response.should have_selector("title",
@@ -114,3 +134,4 @@ describe PagesController do
     end
   end
 end
+
